@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup, SoupStrainer
 import requests
 import re
 import string
-import sys
+import sys, traceback
 
 _fix_mixed_unicode_re = re.compile("([\x7F-\xFF]+)")
 def fix_mixed_unicode(mixed_unicode):
@@ -32,11 +32,12 @@ def scrapeCornellLow(url):
                     print "topic link text: "+topic+"\t\t ***: "+link['href']
                     scrapeLawCases(link['href'], topic)
         except:
+            traceback.print_exc(file=sys.stdout)
             print sys.exc_info()[0]
-            for ch in textStr:
+            for ch in topic:
                 print ch+" "+str(ord(ch))
             print "exception = "+link.text.encode('utf-8','ignore')
-
+            sys.exit(-1)
 
 def scrapeLawCases(url, topic):
     print "enter scrapeLawCases "+url
@@ -58,15 +59,21 @@ def scrapeLawCases(url, topic):
                 textStr = re.sub(r'[^\x00-\x7F]',' ', link.text)
                 if (".ZS.html" in link['href']):
                     print "case link : "+textStr+"\t\t ***: "+link['href']
+                    scrapeWebSyllabus(link['href'],topic)
         except:
             print sys.exc_info()[0]
+            traceback.print_exc(file=sys.stdout)
             for ch in textStr:
                 print ch+" "+str(ord(ch))
             print "exception = "+link.text.encode('utf-8','ignore')
+            sys.exit(-1)
+
             
 
-def scapeWebSyllabus(url, topic):
-    r  = requests.get("https://" +url)
+def scrapeWebSyllabus(url, topic):
+    print 'enter scrapewebsyllabus'
+    url = "https://www.law.cornell.edu" +url
+    r  = requests.get(url)
 
     data = r.text
     data = data.replace("&#151;","&#45;")
@@ -83,23 +90,56 @@ def scapeWebSyllabus(url, topic):
     courtBelow = soup.find(attrs={"name":"COURTBELOW"})
     decDate = soup.find(attrs={"name":"DECDATE"})
     docket = soup.find(attrs={"name":"ACTION"})
-    caseNameStr = caseName["content"]
-    print caseNameStr+"\n"
+    try:
+        caseNameStr = caseName["content"]
+        print caseNameStr+"\n"
+    except:
+        caseNameStr = "empty?"
+    plantiff = "empty?"
+    defendant = "empty?"
     if " v. " in caseNameStr:
         plantiff = caseNameStr.split(" v. ")[0];
         defendant = caseNameStr.split(" v. ")[1];
     elif " V. " in caseNameStr:
         plantiff = caseNameStr.split(" V. ")[0];
         defendant = caseNameStr.split(" V. ")[1];
+    else:
+        print "ERROR no v. or V."
+        
 
+    print ("***** Case information ******")
     print ("url:  "+url+"\n")
     print ("topic:  "+topic +"\n")
-    print ("action:  "+action["content"] +"\n")
-    print ("argDate:  "+argDate["content"] +"\n")
-    print ("caseName:  "+caseName["content"] +"\n")
-    print ("decDate:  "+decDate["content"] +"\n")
-    print ("docket:  "+docket["content"] +"\n")
-    print ("courtBelow:  "+courtBelow["content"] +"\n")
+    try:
+        action = action["content"]
+        print ("action:  "+action["content"] +"\n")
+    except:
+        action = "empty? "
+    try:
+        argDate = argDate["content"]
+        print ("argDate:  "+argDate["content"] +"\n")
+    except:
+        argDate = "empty?"
+    try:
+        caseName = caseName["content"]
+        print ("caseName:  "+caseName["content"] +"\n")
+    except:
+        caseName = "empty?"
+    try:
+        decDate = decDate["content"]
+        print ("decDate:  "+decDate["content"] +"\n")
+    except:
+        decDate = "empty?"
+    try:
+        docket = docket["content"]
+        print ("docket:  "+docket["content"] +"\n")
+    except:
+        docket = "empty?"
+    try:
+        courtBelow = courtBelow["content"]
+        print ("courtBelow:  "+courtBelow["content"] +"\n")
+    except:
+        courtBelow = "empty?"    
     print ("plantiff:  "+plantiff +"\n")
     print ("defendant:  "+defendant +"\n")
 
@@ -130,11 +170,15 @@ def scapeWebSyllabus(url, topic):
         try:
             if link.has_attr('href'):
                 textStr = link.text
-                print "link text: "+textStr+"\t\t ***: "+link['href']
+                clean = textStr.encode('utf-8','ignore')
+                print "link text: "+clean+"\t\t ***: "+link['href']
         except:
+            traceback.print_exc(file=sys.stdout)
             for ch in textStr:
                 print ch+" "+str(ord(ch))
             print "exception = "+link.text.encode('utf-8','ignore')
+            sys.exit(-1)
+
 
 
 
