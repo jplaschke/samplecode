@@ -30,6 +30,9 @@ soup = BeautifulSoup(data)
 #    links.decompose()
 [span.extract() for span in soup.find_all("span")] 
   
+ 
+outputfile = open(".\justices.csv","w")
+outputfile.write("judge, state, begin, end, AppointedBy\n")
 table = soup.find(class_="wikitable sortable")
 for row in table.find_all('tr')[1:]:
     cols = row.findAll('td')
@@ -40,23 +43,32 @@ for row in table.find_all('tr')[1:]:
         num, judge, state, bornDied, activeYears, Chief, Retire, AppointedBy, termination = [c.text.encode('utf-8',errors='backslashreplace') for c in cols]
         #num, judge, state, bornDied, activeYears, Chief, Retire, AppointedBy, termination = [c.text.encode('utf-8').decode('ascii') for c in cols]
         judge = re.sub('[\0\200-\377]', '', judge)
-        print "judge = "+judge
-        print "state = "+state
+        #AppointedBy = re.sub("\n","",AppointedBy)
         activeYears = activeYears.replace(dashChar,"-")
-        print "active years = "+activeYears
+        print ("activeYears = "+activeYears)
+        splityear = activeYears.split("-")
+        begin = splityear[0]
+        end = splityear[1]
+        print( "judge = "+judge )
+        print( "state = "+state )
+       
+        print( "active years = "+activeYears )
+		
+		
       #  for ch in activeYears:
-      #          print ch+" "+str(ord(ch))
+      #          print( ch+" "+str(ord(ch))
       #  break        
-      #  print "repr ="+repr(c.text)
+      #  print( "repr ="+repr(c.text)
+        outputfile.write(judge+","+state+","+begin+","+end+","+","+AppointedBy+"\n")
         
     except Exception, e:
         for c in cols:
-            print "repr r = "+repr(c.text)
+            print( "repr r = "+repr(c.text) )
             for ch in c.text.encode('utf-8').decode('ascii'):
-                print ch+" "+str(ord(ch))
+                print( ch+" "+str(ord(ch)) )
             break
-        print repr(e)
+        print( repr(e) )
         break
                 
         
-   
+outputfile.close()
